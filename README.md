@@ -28,8 +28,8 @@ Temporal Action Detection (TAD) in untrimmed videos poses significant challenges
   - `pip install -r vim/vim_requirements.txt`
 
 - Install ``causal_conv1d`` and ``mamba``
-  - `pip install -e causal_conv1d>=1.1.0`
-  - `pip install -e mamba-1p1p1`
+  - `pip install --no-build-isolation causal-conv1d/`
+  - `pip install --no-build-isolation mamba-1p1p1/`
 
 ## Prepare the Input Video Features
 Like the previous works (e.g. MS-TCT, PDAN), MS-Temba is built on top of the pre-trained video features. Thus, feature extraction is needed before training the network. We train MS-Temba on features extracted using I3D and CLIP backbones.

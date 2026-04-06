@@ -8,13 +8,49 @@ MS-Temba (Multi-Scale Temporal Mamba) is a Temporal Action Detection (TAD) model
 
 ## Environment Setup
 
+The conda environment for this project is **`cvs_temba`**.
+
 ```bash
-conda create -n your_env_name python=3.10.13
+conda create -n cvs_temba python=3.10.13
 pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu118
 pip install -r vim/vim_requirements.txt
+pip install wandb torchmetrics
+
+# Install local Mamba/causal-conv1d (order matters — mamba must be --no-deps
+# so it doesn't pull a newer causal_conv1d that breaks the API)
 pip install --no-build-isolation causal-conv1d/
-pip install --no-build-isolation mamba-1p1p1/
+pip install --no-build-isolation --no-deps mamba-1p1p1/
 ```
+
+After installing, two files from `mamba-1p1p1/` must be copied into the
+installed `mamba_ssm` package, and the `causal_conv1d` call signatures patched
+to match causal_conv1d 1.0.0 (which dropped the `seq_idx` argument):
+
+```bash
+export MAMBA_SITE=$(python -c "import mamba_ssm, os; print(os.path.dirname(mamba_ssm.__file__))")
+
+# 1. Copy the getC custom modules (not included by the installer)
+cp mamba-1p1p1/mamba_ssm/modules/mamba_simple_getC.py       $MAMBA_SITE/modules/
+cp mamba-1p1p1/mamba_ssm/ops/selective_scan_interface_getC.py $MAMBA_SITE/ops/
+
+# 2. Patch call signatures: remove seq_idx=None (incompatible with causal_conv1d 1.0.0)
+python - <<'EOF'
+import re, os
+path = os.path.join(os.environ["MAMBA_SITE"], "ops/selective_scan_interface_getC.py")
+src = open(path).read()
+src = re.sub(r'(causal_conv1d_cuda\.causal_conv1d_fwd\(.+?),\s*None,\s*True\)',
+             r'\1, True)', src)
+src = re.sub(r'(causal_conv1d_cuda\.causal_conv1d_bwd\([^)]+?),\s*None,\s*(dx, True)',
+             r'\1, \2', src)
+open(path, 'w').write(src)
+print("patched", path)
+EOF
+```
+
+**Why this is needed**: `mamba-1p1p1`'s `selective_scan_interface_getC.py` was
+written against a causal_conv1d version that added a `seq_idx` positional
+argument. The local `causal-conv1d/` (v1.0.0) does not have it, causing a
+`TypeError` on both forward and backward passes.
 
 ## Training Commands
 

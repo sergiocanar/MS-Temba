@@ -1,0 +1,21 @@
+{
+  "files.watcherExclude": {
+    "**/data/SAGES_2024/**": true,
+    "**/data/endoscapes_2023/**": true,
+    "**/wandb/**": true,
+    "**/outputs/**": true
+  },
+  "search.exclude": {
+    "**/data/SAGES_2024/**": true,
+    "**/data/endoscapes_2023/**": true,
+    "**/wandb/**": true,
+    "**/outputs/**": true
+  },
+  "files.exclude": {
+    "**/wandb/**": true,
+    "**/data/**": true,
+  },
+  "explorer.autoReveal": false,
+  "python-envs.defaultEnvManager": "ms-python.python:conda",
+  "python-envs.defaultPackageManager": "ms-python.python:conda"
+}
